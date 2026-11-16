@@ -171,7 +171,11 @@ class SignatureModel(Struct):
         cls, deserializer: Callable[[Any, Any], Any], kwargs: dict[str, Any]
     ) -> list[tuple[str, Exception]]:
         exceptions: list[tuple[str, Exception]] = []
-        for field_name in cls._fields:
+        for field_name, field_definition in cls._fields.items():
+            if field_name not in kwargs:
+                if not field_definition.has_default:
+                    exceptions.append((field_name, ValueError(f"Missing required field '{field_name}'")))
+                continue
             try:
                 raw_value = kwargs[field_name]
                 annotation = cls.__annotations__[field_name]
